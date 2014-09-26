@@ -64,14 +64,6 @@ class SQLConnection(object):
                                         sqla.Column('end_time', sqla.Float),
                                         sqla.Column('integral', sqla.Float),
                                         sqla.Column('tethered', sqla.String(3)))
-            self.bead_data = sqla.Table('bead_data', self.metadata,
-                                        sqla.Column('id', sqla.Integer, primary_key=True),
-                                        sqla.Column('file_id',  None, sqla.ForeignKey('filelist.id')),
-                                        sqla.Column('cycle', sqla.Integer),
-                                        sqla.Column('forces', sqla.Float),
-                                        sqla.Column('slope', sqla.Float),
-                                        sqla.Column('zero_position', sqla.Float),
-                                        sqla.Column('time', sqla.Float))
             self.metadata.create_all(self.engine)
             self.conn = self.engine.connect()
         except Exception as e:
