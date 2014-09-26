@@ -3,8 +3,11 @@ automatedAFManalysis
 
 Automated analysis of single bond cell/afm adhesion experiments
 
-This program automatically analyzes data taken in AFM single cell force spectroscopy experiments. A screen shot of the typical
-output is included.
+This program automatically analyzes data taken in AFM single cell force spectroscopy experiments of the typ seen in:
+
+2005. Evans, E., V. Heinrich, A. Leung, and K. Kinoshita. Nano- to microscale dynamics of P-selectin detachment from leukocyte interfaces. I. Membrane separation from the cytoskeleton. Biophysical Journal 88(3):2288-2298.2006. 
+
+A screen shot of the typical output is included as interface.png.
 
 Overview:
 
