@@ -28,7 +28,7 @@ that of any "ground truth" (hand analyzed) data that maybe present in the SQL da
 Using the Program:
 
 In order to run the program it will require a connection to an SQL database containing file locations for force time results.
-You will have to go to afm_sql_code\afmsqlcode.py and enter your database information where it says #ENTER DATABASE INFO HERE.
+Enter this information by selecting 'Connect' from the menu.
 A picture of the interface can be seen in interface.png
 
 The left side of the interface contains lists with several experimental parameters.  These are loaded from the database.
@@ -62,10 +62,7 @@ cantilever, one contains data for the compression of the cell against the cantil
 and finally one contains the retraction data.
 
   SQL Database:
-  
-  In order to make the program work you will have to go to afm_sql_code\afmsqlcode.py and enter your database information where
-  it says #ENTER DATABASE INFO HERE.
-  
+   
   The database is assumed to have the following tables:
   
   filelist: A table listing raw data files each with hundreds of experiments.  It contains data like the buffer the experiments

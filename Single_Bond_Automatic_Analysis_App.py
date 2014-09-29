@@ -12,7 +12,7 @@ from PyQt4 import QtCore, QtGui
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from automatedAFManalysis.dataviewer.autoanalysisgui import Ui_MainWindow
-from automatedAFManalysis.dataviewer.dataviewer import Database, InputWindow
+from automatedAFManalysis.dataviewer.dataviewer import Database, InputWindow, ConnectDialog
 import csv
 from multiprocessing import freeze_support
 
@@ -40,7 +40,7 @@ class Viewer(MainWindow, InputWindow):
     borrows heavily from the design of the GUI of the dataviewer program, it
     inherits from that programs InputWindow class.
 
-    Member Variables/Objects:
+    Member Variables/Objects:•
 
         Private:
             _cell_flag: Serves no purpose in this program, vestigial from the
@@ -74,6 +74,7 @@ class Viewer(MainWindow, InputWindow):
             _error: Creates an error dialog
             _plot_callback: Callback that runs when user presses the plot button
             _save_callback: Callback for the save menu action
+            _connect_callback: Callback for the connect menu action
     '''
 
     cancelsig = QtCore.pyqtSignal(bool)
@@ -96,15 +97,11 @@ class Viewer(MainWindow, InputWindow):
         self._utforces = []
         self._utslopes = []
 
-        #Initialize database control, get valid menu options
-        self._database = MLDatabase()
-        self._init_tables()
-
         #Connect controls to callbacks
         self._bind_callbacks()
-
+        self.plot_button.setEnabled(False)
         #Initialize progressbar
-        self._onprogress(0)
+        self.progressBar.setValue(0)
 
         #Setup plots
         self._tscatplot = MyMplCanvas(self.tscattframe,
@@ -172,7 +169,7 @@ class Viewer(MainWindow, InputWindow):
             self.cancelbutton.setEnabled(True)
             self.progressBar.setRange(0, self._database.totalcycs)
             #Creates _analyze_task and starts it
-            self._analyze_task = AnalyzeTask(self._database.list_of_ids, self)
+            self._analyze_task = AnalyzeTask(self._database.list_of_ids, self, self._conn)
             self._analyze_task.start()
             #Connects various signals between the viewer and the _analyze_task
             self._analyze_task.notifyProgress.connect(self._onprogress)
@@ -180,8 +177,8 @@ class Viewer(MainWindow, InputWindow):
             self._analyze_task.errsig.connect(self.error)
             self.cancelsig.connect(self._analyze_task.abort)
         except Exception as errtext:
-            err_box = Errbox(self._viewer)
-            err_box.setText(errtext)
+            err_box = Errbox(self)
+            err_box.setText(str(errtext))
             err_box.exec_()
 
     def _plotstuff(self, data):
@@ -322,6 +319,24 @@ class Viewer(MainWindow, InputWindow):
             self.proglabel.setText('Done.')
         self.progressBar.setValue(i)
 
+    def _connect_callback(self):
+        '''
+        The _connect_callback runs when the user picks the connect menu option.
+        It connects to an SQL database with experimental data locations and
+        then retrieves valid parameters for various menu options.
+        '''
+
+        connectdialog = ConnectDialog()
+        try:
+            self._conn = SQLConnection(connectdialog.username, connectdialog.password, connectdialog.host, connectdialog.port)
+            self._database = MLDatabase(self._conn)
+            self._init_tables()
+            self.plot_button.setEnabled(True)
+        except Exception as e:
+            self.error(str(e))
+            return
+
+
     def error(self, errtext):
         '''
         Creates generic error dialog.
@@ -356,13 +371,14 @@ class MLDatabase(Database):
 
     '''
 
-    def __init__(self):
+    def __init__(self, conn):
         '''
         The __init__ method runs the Database __init__ method.
         '''
         self.list_of_ids = []
         self.totalcycs = 0
-        Database.__init__(self)
+        Database.__init__(self, conn)
+        
     def get_valid_params(self, tuple_in, cell_flag, tetherflag):
         '''
         The get_valid_params method returns the valid parameter choices given a
@@ -499,12 +515,12 @@ class EmittingSQLDat(SQLData):
                             progress signal with each classified cycle
     '''
 
-    def __init__(self, fileid, method_flag, emitter, prog, thresh_val=25,
+    def __init__(self, fileid, method_flag, conn, emitter, prog, thresh_val=25,
                  win=21, parent=None, cyclist=None):
         self.emitter = emitter
         self.prog = prog
         cycs = cyclist
-        SQLData.__init__(self, fileid, method_flag, thresh_val=25,
+        SQLData.__init__(self, fileid, method_flag, conn, thresh_val=25,
                          win=21, parent=None, cyclist=cycs)
     def get_next_cycle(self):
         '''
@@ -621,7 +637,7 @@ class AnalyzeTask(QtCore.QThread):
     notifyProgress = QtCore.pyqtSignal(int)
     datasig = QtCore.pyqtSignal(dict)
 
-    def __init__(self, ids, viewer):
+    def __init__(self, ids, viewer, conn):
         '''
         The __init__ method sets initial values for instance objects/variables.
 
@@ -632,7 +648,7 @@ class AnalyzeTask(QtCore.QThread):
         '''
 
         self._prog = 0
-        self._conn = SQLConnection()
+        self._conn = conn
         self._listofids = ids
         self._totalanalyzedcycs = 0
         self._abortf = False
@@ -664,7 +680,6 @@ class AnalyzeTask(QtCore.QThread):
             self._get_true_data()
             self._generate_all_features()
             if self._output['tetherforces'] != None:
-                self._conn.close()
                 try:
                     self.datasig.emit(self._output)
                 except Exception as errtext:
@@ -1038,7 +1053,7 @@ class AnalyzeTask(QtCore.QThread):
         #Cycling through all the values of _listofids
         for ids in self._listofids:
             #Current data object, corresponding to 1 raw data file
-            self._data = EmittingSQLDat(ids, 4, self.notifyProgress, self._prog)
+            self._data = EmittingSQLDat(ids, 4, self._conn, self.notifyProgress, self._prog)
             #Current cycle from the data object, 2d array of force, time data,
             #only retrieves cycles the classifier has marked as single bonds
             self._cycdat = self._data.get_next_cycle()
