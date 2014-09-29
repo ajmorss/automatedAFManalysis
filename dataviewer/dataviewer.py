@@ -8,6 +8,7 @@ Created on Tue Jun 10 15:39:35 2014
 from automatedAFManalysis.dataviewer.legacy_interface import Ui_MainWindow
 from PyQt4 import QtGui, QtCore
 import numpy as np
+import automatedAFManalysis.dataviewer.connectdialog as cd
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg as NavigationToolbar
 from matplotlib.figure import Figure
@@ -19,6 +20,24 @@ class MainWindow(QtGui.QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None, f=QtCore.Qt.WindowFlags()):
         QtGui.QMainWindow.__init__(self, parent, f)
         self.setupUi(self)
+
+class ConnectDialog(QtGui.QDialog, cd.Ui_Dialog):
+    '''
+    This class defines the connect dialog box.
+    '''
+    def __init__(self,parent=None):
+        QtGui.QDialog.__init__(self,parent)
+        self.setupUi(self)
+        self.okB.clicked.connect(self._ok_callback)
+        self.setWindowTitle('Connect To SQL Database')
+        self.exec_()
+    
+    def _ok_callback(self):
+        self.username = self.usernameLE.text()
+        self.password = self.passwordLE.text()
+        self.host = self.hostnameLE.text()
+        self.port = self.portLE.text()
+        self.close()
 
 class MyMplCanvas(FigureCanvas):
     '''
@@ -107,6 +126,12 @@ class InputWindow(MainWindow):
         self._init_tables()
         self._plot_callback()
 
+    def _connect_callback(self):
+        connectdialog = ConnectDialog()
+        self._conn = SQLConnection(connectdialog.username, connectdialog.password, connectdialog.host, connectdialog.port)
+        self._database = Database(self._conn)
+        self._init_tables()
+
     def _bind_callbacks(self):
         '''
         The _bind_callbacks method...binds the callbacks
@@ -128,7 +153,8 @@ class InputWindow(MainWindow):
                                self._exit_callback)
         QtCore.QObject.connect(self.actionSave, QtCore.SIGNAL('triggered()'),
                                self._save_callback)
-
+        QtCore.QObject.connect(self.actionConnect, QtCore.SIGNAL('triggered()'),
+                               self._connect_callback)
         tablist = [self.pipette_object, self.cantilever_object, self.date,
                    self.loading_rate, self.buffer]
         for table in tablist:
@@ -472,12 +498,12 @@ class Database(object):
             close: Closes the SQLConnection object
     '''
 
-    def __init__(self):
+    def __init__(self, conn):
         '''
         The __init__ method establishes a connection to the database
         '''
 
-        self._conn = SQLConnection()
+        self._conn = conn
         self.list_of_features = []
 
     def update_list(self, tuple_in, cell_flag, tetherflag):

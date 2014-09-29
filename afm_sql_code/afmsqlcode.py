@@ -17,15 +17,11 @@ class SQLConnection(object):
     Connection to the SQL database where all the afm results/file info/file
     locations are stored.
     '''
-    def __init__(self):
+    def __init__(self, username, password, host, port):
         try:
             #ENTER DATABASE INFO HERE
             connection = 'mysql+mysqldb://%s:%s@%s:%s/afm_data'
-            hostname = ''
-            port = ''
-            username = ''
-            password = ''
-            connection = connection % (username, password, hostname, port)
+            connection = connection % (username, password, host, port)
             self.engine = sqla.create_engine(connection)
             self.metadata = sqla.MetaData()
             self.filelist = sqla.Table('filelist', self.metadata,
@@ -222,7 +218,7 @@ class SQLData(object):
             fin_peaks: Finds discontinuities in the current cycle
     '''    
     
-    def __init__(self, fileid, method_flag, thresh_val=25, win=21, parent = None, cyclist = None):
+    def __init__(self, fileid, method_flag, conn, thresh_val=25, win=21, parent = None, cyclist = None):
         '''
         The __init__ method retrieves the file locations from the sql database
         and sends them to the worker pools to be imported. It also sets initial
@@ -247,7 +243,6 @@ class SQLData(object):
             self._classifier = pickle.load( open( "machine_learning\\best_bond_classifier.p", "rb" ) )
         self.tethered = None
         #Get file locations from the database
-        conn = SQLConnection()
         s = sqla.select([conn.dat.c.location]).where((conn.filelist.c.id == fileid) & (conn.dat.c.file_id == conn.filelist.c.id) & (conn.dat.c.piezo_state == 0)).order_by(conn.dat.c.cycle)
         self.ps0_locations = []
         for rows in conn.execute(s):
@@ -267,7 +262,6 @@ class SQLData(object):
         s = sqla.select([conn.filelist.c.loading_rate, conn.filelist.c.k]).where((conn.filelist.c.id == fileid))
         for rows in conn.execute(s):
             self.retrate = float(rows[0])/float(rows[1])
-        conn.close()
 
         #Get total number of cycle locations retrieved
         self._cycs = len(self.ps3_locations)
