@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'connectdialog.ui'
 #
-# Created: Fri Sep 26 13:39:41 2014
+# Created: Mon Sep 29 10:30:20 2014
 #      by: PyQt4 UI code generator 4.9.6
 #
 # WARNING! All changes made in this file will be lost!
@@ -53,8 +53,11 @@ class Ui_Dialog(object):
         self.passwordLE.setEchoMode(QtGui.QLineEdit.Password)
         self.passwordLE.setObjectName(_fromUtf8("passwordLE"))
         self.okB = QtGui.QPushButton(Dialog)
-        self.okB.setGeometry(QtCore.QRect(190, 150, 75, 23))
+        self.okB.setGeometry(QtCore.QRect(120, 150, 75, 23))
         self.okB.setObjectName(_fromUtf8("okB"))
+        self.cancelB = QtGui.QPushButton(Dialog)
+        self.cancelB.setGeometry(QtCore.QRect(210, 150, 75, 23))
+        self.cancelB.setObjectName(_fromUtf8("cancelB"))
 
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
@@ -65,5 +68,6 @@ class Ui_Dialog(object):
         self.label_2.setText(_translate("Dialog", "Port", None))
         self.label_3.setText(_translate("Dialog", "Username", None))
         self.label_4.setText(_translate("Dialog", "Password", None))
-        self.okB.setText(_translate("Dialog", "PushButton", None))
+        self.okB.setText(_translate("Dialog", "Ok", None))
+        self.cancelB.setText(_translate("Dialog", "Cancel", None))
 

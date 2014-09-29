@@ -29,14 +29,22 @@ class ConnectDialog(QtGui.QDialog, cd.Ui_Dialog):
         QtGui.QDialog.__init__(self,parent)
         self.setupUi(self)
         self.okB.clicked.connect(self._ok_callback)
+        self.cancelB.clicked.connect(self._cancel_callback)
         self.setWindowTitle('Connect To SQL Database')
         self.exec_()
-    
+
     def _ok_callback(self):
         self.username = self.usernameLE.text()
         self.password = self.passwordLE.text()
         self.host = self.hostnameLE.text()
         self.port = self.portLE.text()
+        self.close()
+
+    def _cancel_callback(self):
+        self.username = None
+        self.password = None
+        self.host = None
+        self.port = None
         self.close()
 
 class MyMplCanvas(FigureCanvas):
@@ -128,9 +136,15 @@ class InputWindow(MainWindow):
 
     def _connect_callback(self):
         connectdialog = ConnectDialog()
-        self._conn = SQLConnection(connectdialog.username, connectdialog.password, connectdialog.host, connectdialog.port)
-        self._database = Database(self._conn)
-        self._init_tables()
+        if connectdialog.username == None:
+            self._conn = SQLConnection(connectdialog.username,
+                                       connectdialog.password,
+                                       connectdialog.host,
+                                       connectdialog.port)
+            self._database = Database(self._conn)
+            self._init_tables()
+        else:
+            pass
 
     def _bind_callbacks(self):
         '''

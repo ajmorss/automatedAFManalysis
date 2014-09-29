@@ -327,15 +327,20 @@ class Viewer(MainWindow, InputWindow):
         '''
 
         connectdialog = ConnectDialog()
-        try:
-            self._conn = SQLConnection(connectdialog.username, connectdialog.password, connectdialog.host, connectdialog.port)
-            self._database = MLDatabase(self._conn)
-            self._init_tables()
-            self.plot_button.setEnabled(True)
-        except Exception as e:
-            self.error(str(e))
-            return
-
+        if connectdialog.username == None:
+            pass
+        else:
+            try:
+                self._conn = SQLConnection(connectdialog.username,
+                                           connectdialog.password,
+                                           connectdialog.host,
+                                           connectdialog.port)
+                self._database = MLDatabase(self._conn)
+                self._init_tables()
+                self.plot_button.setEnabled(True)
+            except Exception as e:
+                self.error(str(e))
+                return
 
     def error(self, errtext):
         '''
@@ -378,7 +383,7 @@ class MLDatabase(Database):
         self.list_of_ids = []
         self.totalcycs = 0
         Database.__init__(self, conn)
-        
+
     def get_valid_params(self, tuple_in, cell_flag, tetherflag):
         '''
         The get_valid_params method returns the valid parameter choices given a
